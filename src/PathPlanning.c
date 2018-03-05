@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include "PathPlanning.h"
 
 /* Number of sample points for valid checker. */
@@ -124,11 +125,7 @@ isTransitionValid(pp *pp, ppstate *start, ppstate *end)
 bool
 isGoalSatisfied(pp* pp, ppstate* state)
 {
-  float gapx = pp->_goal_state.x - state->x;
-  float gapy = pp->_goal_state.y - state->y;
-  float gapz = pp->_goal_state.z - state->z;
-
-  return (gapx * gapx + gapy * gapy + gapz * gapz) <= DIST2_THRESHOLD;
+  return calDistSqr(&pp->_goal_state, state) <= DIST2_THRESHOLD;
 }
 
 /* Generate a random float number between 0 and max. */
@@ -136,6 +133,24 @@ float
 randFloat(uint8_t max)
 {
   return (float)rand() / (float)RAND_MAX * (float)max;
+}
+
+/* Calculate the squared distance between two points */
+float
+calDistSqr(ppstate* a, ppstate* b)
+{
+  float gapx = a->x - b->x;
+  float gapy = a->y - b->y;
+  float gapz = a->z - b->z;
+
+  return gapx * gapx + gapy * gapy + gapz * gapz;
+}
+
+/* Calculate the distance between two points. */
+float
+calDist(ppstate *a, ppstate *b)
+{
+  return sqrt(calDistSqr(a, b));
 }
 
 /* Copy the state src to dst. */

@@ -42,6 +42,8 @@ void setBias(pp*, float);
 bool isTransitionValid(pp*, ppstate*, ppstate*);
 bool isGoalSatisfied(pp*, ppstate*);
 float randFloat(uint8_t);
+float calDistSqr(ppstate*, ppstate*);
+float calDist(ppstate*, ppstate*);
 void copyState(ppstate*, ppstate*);
 ppstate* sampleUniform(pp*);
 ppstate* sampleGoal(pp*);
