@@ -131,21 +131,24 @@ run_RRT (struct pathPlanning *pp)
     if (isGoalSatisfied(pp, new_state))
     {
       /* Found the solution! Stop the loop and TODO: collect the path. */
-      printf("Solution found! Takes %d loops. Need %d steps.\n", iter_cnt,
+      printf("Solution found! Takes %d loops. Sampled %d states.\n", iter_cnt,
              node_cnt);
       FILE *fd = pp->_out_file;
 
       /* Write the goal to the file, then traverse the tree */
       write_state(fd, &pp->_goal_state);
+      uint32_t num_steps = 0;
       uint32_t node_idx = node_cnt - 1;
       while (tree[node_idx]._parent != node_idx)
       {
         write_state(fd, &tree[node_idx]._pos);
         node_idx = tree[node_idx]._parent;
+        num_steps++;
       }
       /* Make sure we reach the start point. */
       assert (node_idx == 0);
       write_state(fd, &tree[0]._pos);
+      printf("Solution with %d steps written to the file!\n", num_steps + 1);
       return true;
     }
     free(new_state);
