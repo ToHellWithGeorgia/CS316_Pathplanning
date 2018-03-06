@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <assert.h>
 
 /* path planning state */
@@ -24,7 +25,7 @@ struct pathPlanning
   uint32_t _max_iter;
   float _bias;
   bool (*_validFunc)(ppstate*);
-  // struct Path *_path;
+  FILE *_out_file;
 };
 
 typedef struct pathPlanning pp;
@@ -37,6 +38,7 @@ void setGoalState(pp*, float, float, float);
 void setStepSize(pp*, float);
 void setMaxIter(pp*, uint32_t);
 void setBias(pp*, float);
+void setOutFile(pp*, FILE*);
 
 /* Helper functions. */
 bool isTransitionValid(pp*, ppstate*, ppstate*);

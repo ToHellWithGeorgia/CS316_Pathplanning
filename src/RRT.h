@@ -15,5 +15,6 @@ struct rrt_node
 typedef struct rrt_node node;
 
 bool run_RRT (struct pathPlanning*);
+void interpolate(ppstate*, ppstate*, float);
 
 #endif /* RRT.h */

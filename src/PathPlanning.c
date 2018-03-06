@@ -76,6 +76,12 @@ setBias(pp* pp, float bias)
   pp->_bias = bias;
 }
 
+void
+setOutFile(pp* pp, FILE *fd)
+{
+  pp->_out_file = fd;
+}
+
 /* ------------------- Helper Functions ------------------*/
 
 static bool

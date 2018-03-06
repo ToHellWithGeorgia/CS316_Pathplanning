@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-I. -Wall -g
+CFLAGS=-I. -Wall -g -lm
 DEPS = PathPlanning.h RRT.h
 OBJ = PathPlanning.o RRT.o RRTtest.o
 OBJDIR = obj
