@@ -5,16 +5,20 @@
 #include "PathPlanning.h"
 
 bool cubeCenterValidFunc (ppstate*);
+bool fourCubeValidFunc (ppstate*);
+bool simpleMazeValidFunc (ppstate*);
 
 int main()
 {
   struct pathPlanning rrt;
   setBoundary(&rrt, 5.0);
-  setValidFunc(&rrt, cubeCenterValidFunc);
+  // setValidFunc(&rrt, cubeCenterValidFunc);
+  // setValidFunc(&rrt, eightCubeValidFunc);
+  setValidFunc(&rrt, simpleMazeValidFunc);
   setStartState(&rrt, 0.0, 0.0, 0.0);
   setGoalState(&rrt, 5.0, 5.0, 5.0);
   setStepSize(&rrt, 0.1);
-  setMaxIter(&rrt, 1000);
+  setMaxIter(&rrt, 5000);
   setBias(&rrt, 0.1);
 
   FILE *fd;
@@ -58,4 +62,73 @@ cubeCenterValidFunc (ppstate* state)
     return false;
   else
     return true;
+}
+
+/* A slightly more complicated valid motion checker. */
+bool
+eightCubeValidFunc (ppstate* state)
+{
+  float x = state->x;
+  float y = state->y;
+  float z = state->z;
+
+  if ((x > 1) && (x < 2) &&
+      (y > 1) && (y < 2) &&
+      (z > 1) && (z < 2))
+    return false;
+
+  if ((x > 1) && (x < 2) &&
+      (y > 1) && (y < 2) &&
+      (z > 3) && (z < 4))
+    return false;
+
+  if ((x > 1) && (x < 2) &&
+      (y > 3) && (y < 4) &&
+      (z > 1) && (z < 2))
+    return false;
+
+  if ((x > 1) && (x < 2) &&
+      (y > 3) && (y < 4) &&
+      (z > 3) && (z < 4))
+    return false;
+
+  if ((x > 3) && (x < 4) &&
+      (y > 1) && (y < 2) &&
+      (z > 1) && (z < 2))
+    return false;
+
+  if ((x > 3) && (x < 4) &&
+      (y > 1) && (y < 2) &&
+      (z > 3) && (z < 4))
+    return false;
+
+  if ((x > 3) && (x < 4) &&
+      (y > 3) && (y < 4) &&
+      (z > 1) && (z < 2))
+    return false;
+
+  if ((x > 3) && (x < 4) &&
+      (y > 3) && (y < 4) &&
+      (z > 3) && (z < 4))
+    return false;
+
+  return true;
+}
+
+/* A  */
+bool
+simpleMazeValidFunc(ppstate *state)
+{
+  float x = state->x;
+  float z = state->z;
+
+  if ((x > 1) && (x < 2) &&
+      (z >= 0) && (z < 4))
+    return false;
+
+  if ((x > 3) && (x < 4) &&
+      (z > 1) && (z <= 5))
+    return false;
+
+  return true;
 }
