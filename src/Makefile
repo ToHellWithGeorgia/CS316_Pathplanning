@@ -8,7 +8,7 @@ WORKLOADS = runRRT
 
 # non-gem5 and non-aladdin program-centric flags
 CFLAGS += 
-LFLAGS += 
+LFLAGS += -lm 
 INCLUDES += 
 
 #########################################################
