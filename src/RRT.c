@@ -9,13 +9,13 @@ static node *tree;
 static uint32_t node_cnt;   /* Count the numbers of nodes in trees. */
 static uint32_t tree_size;  /* Keep tracks of how big is the tree. */
 
-static void RRT_init(pp*);
+void RRT_init(pp*);
 static void expand_tree_size(void);
 static uint32_t findNN(ppstate*);
 static void write_state(FILE*, ppstate*);
 
 /* Init a 1k tree first. We will grow the array if it needs more size. */
-static void
+void
 RRT_init(pp* pp)
 {
   tree = (node *)calloc(MAX_ITER_SIZE, sizeof(node));

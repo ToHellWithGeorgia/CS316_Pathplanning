@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <PathPlanning.h>
+#include "PathPlanning.h"
 
 #define MAX_ITER_SIZE 10
 
@@ -18,5 +18,6 @@ typedef struct rrt_node node;
 
 bool run_RRT (struct pathPlanning*);
 void interpolate(ppstate*, ppstate*, float);
+void RRT_init(pp*);
 
 #endif /* RRT.h */
