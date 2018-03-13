@@ -4,7 +4,6 @@
 #include "RRT.h"
 #include "PathPlanning.h"
 
-#define INIT_SIZE 128
 
 static node *tree;
 static uint32_t node_cnt;   /* Count the numbers of nodes in trees. */
@@ -19,9 +18,9 @@ static void write_state(FILE*, ppstate*);
 static void
 RRT_init(pp* pp)
 {
-  tree = (node *)calloc(INIT_SIZE, sizeof(node));
-  assert (tree);
-  tree_size = INIT_SIZE;
+  tree = (node *)calloc(MAX_ITER_SIZE, sizeof(node));
+  assert (tree && "could not allocate memory for tree");
+  tree_size = MAX_ITER_SIZE;
   node_cnt = 0;
 
   /* Push the start node to the array. It has itself as its parent. */
@@ -50,7 +49,7 @@ findNN(ppstate *tgt)
   uint32_t find_idx = UINT32_MAX;
   float distSqr = SIZE_MAX;
 
-  for (uint32_t idx = 0; idx < node_cnt; idx++)
+  findNN_loop: for (uint32_t idx = 0; idx < node_cnt; idx++)
   {
     float newDistSqr = calDistSqr(&tree[idx]._pos, tgt);
     if (newDistSqr < distSqr)
@@ -91,17 +90,15 @@ write_state(FILE *fd, ppstate *s)
 bool
 run_RRT (struct pathPlanning *pp)
 {
-  RRT_init(pp);
+  
  
-  uint32_t iter_cnt = 0;
+  uint32_t iter_cnt;
   // bool reached = false;
 
   /* TODO: This while loop could be parellelized. Maybe create multiple
      initial trees? */
-  while (iter_cnt < pp->_max_iter)
+  runRRT_loop: for(iter_cnt = 0; iter_cnt < MAX_ITER_SIZE; iter_cnt++)
   {
-    iter_cnt++;
-
     ppstate *new_state;
     /* Grow the tree with a bias to the goal. */
     if (randFloat(1) > pp->_bias)
@@ -154,8 +151,8 @@ run_RRT (struct pathPlanning *pp)
     free(new_state);
 
     /* Check if we need to expand the tree. */
-    if (node_cnt == tree_size)
-      expand_tree_size();
+    //if (node_cnt == tree_size)
+    //  expand_tree_size();
   }
 
   printf("Solution not found :(\n");

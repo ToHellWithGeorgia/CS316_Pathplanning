@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <PathPlanning.h>
 
+#define MAX_ITER_SIZE 10
+
 /* The size of the struct is now 8B */
 struct rrt_node
 {

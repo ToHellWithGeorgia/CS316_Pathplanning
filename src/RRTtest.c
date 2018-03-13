@@ -4,9 +4,14 @@
 #include "RRT.h"
 #include "PathPlanning.h"
 
+#include "aladdin_sys_connection.h"
+#include "aladdin_sys_constants.h"
+
 bool cubeCenterValidFunc (ppstate*);
 bool fourCubeValidFunc (ppstate*);
 bool simpleMazeValidFunc (ppstate*);
+
+node *tree;
 
 int main()
 {
@@ -18,7 +23,7 @@ int main()
   setStartState(&rrt, 0.0, 0.0, 0.0);
   setGoalState(&rrt, 5.0, 5.0, 5.0);
   setStepSize(&rrt, 0.1);
-  setMaxIter(&rrt, 5000);
+  setMaxIter(&rrt, MAX_ITER_SIZE);
   setBias(&rrt, 0.1);
 
   FILE *fd;
@@ -26,7 +31,15 @@ int main()
   setOutFile(&rrt, fd);
 
   srand(time(NULL));
-  run_RRT(&rrt);
+  RRT_init(&rrt);
+
+  #ifdef GEM5_ACCEL
+    mapArrayToAccelerator(INTEGRATION_TEST, "rrt", &rrt, sizeof(rrt));
+    mapArrayToAccelerator(INTEGRATION_TEST, "tree", &(tree[0]), MAX_ITER_SIZE * sizeof(node));
+    invokeAcceleratorAndBlock(INTEGRATION_TEST);
+  #else
+    run_RRT(&rrt);
+  #endif
 
   /*
   bool valid = isTransitionValid(&rrt, &rrt._start_state, &rrt._goal_state);

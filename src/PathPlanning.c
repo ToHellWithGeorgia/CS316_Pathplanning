@@ -115,7 +115,7 @@ isTransitionValid(pp *pp, ppstate *start, ppstate *end)
   float stepz = (z2 - z1) / NUMSAMPLE;
 
   /* TODO: think of ways to parallelize here. */
-  for (uint32_t num = 0; num < NUMSAMPLE; num++)
+  isTransitionValid_loop: for (uint32_t num = 0; num < NUMSAMPLE; num++)
   {
     ppstate checkState;
     checkState.x = x1 + num * stepx;
