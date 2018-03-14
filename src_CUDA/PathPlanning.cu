@@ -3,12 +3,12 @@
 #include "PathPlanning.h"
 
 /* Number of sample points for valid checker. */
-#define NUMSAMPLE 1000
+#define NUMSAMPLE 1024
 /* The distance square threshold of being close enough*/
 #define DIST2_THRESHOLD 0.01
 
 static bool checkBoundary(pp*, float, float, float);
-static bool checkValid(pp*, ppstate*);
+// bool checkValid(pp*, ppstate*);
 
 static bool
 checkBoundary(pp* pp, float x, float y, float z)
@@ -84,14 +84,54 @@ setOutFile(pp* pp, FILE *fd)
 
 /* ------------------- Helper Functions ------------------*/
 
-static bool
+__host__ __device__ bool
 checkValid(pp *pp, ppstate *state)
 {
   return pp->_validFunc(state);
 }
 
+/* Cannot use the host valid checker code. Workaround. */
+__device__ bool
+tempValid(ppstate* state)
+{
+  float x = state->x;
+  float z = state->z;
+
+  if ((x > 1) && (x < 2) &&
+      (z >= 0) && (z < 4))
+    return false;
+
+  if ((x > 3) && (x < 4) &&
+      (z > 1) && (z <= 5))
+    return false;
+
+  return true;
+}
+
+/* Kernel to boost the valid checking process. */
+__global__ void
+validCheckKernel(pp *pp, float x1, float y1, float z1,
+                 float stepx, float stepy, float stepz, bool *result)
+{
+  int i = blockDim.x * blockIdx.x + threadIdx.x;
+  __shared__ bool temp;
+  temp = true;
+  __syncthreads();
+
+  ppstate checkState;
+  checkState.x = x1 + i * stepx;
+  checkState.y = y1 + i * stepy;
+  checkState.z = z1 + i * stepz;
+  if (!tempValid(&checkState))
+    temp = false;
+
+  __syncthreads();
+  *result = temp;
+
+}
+
 /* Check if a transition from start state to end state if valid. */
-bool
+__host__ bool
 isTransitionValid(pp *pp, ppstate *start, ppstate *end)
 {
   /* Return false if either of the points is in the obstacle region. */
@@ -114,17 +154,24 @@ isTransitionValid(pp *pp, ppstate *start, ppstate *end)
   float stepy = (y2 - y1) / NUMSAMPLE;
   float stepz = (z2 - z1) / NUMSAMPLE;
 
-  /* TODO: think of ways to parallelize here. */
-  for (uint32_t num = 0; num < NUMSAMPLE; num++)
-  {
-    ppstate checkState;
-    checkState.x = x1 + num * stepx;
-    checkState.y = y1 + num * stepy;
-    checkState.z = z1 + num * stepz;
-    if (!checkValid(pp, &checkState))
-      return false;
-  }
-  return true;
+  /* Setting up the variable to run CUDA kernel. */ 
+  bool local_res;
+  bool temp = true;
+  bool *result;
+  CUDA_ERR_CK(cudaMalloc((void **)&result, sizeof(bool)));
+  CUDA_ERR_CK(cudaMemcpy(result, &temp, sizeof(bool),
+                         cudaMemcpyHostToDevice));
+
+  int numThread = 128;
+  validCheckKernel<<<NUMSAMPLE/numThread, numThread>>>(pp, x1, y1, z1,
+                                                       stepx, stepy, stepz,
+                                                       result);
+
+  CUDA_ERR_CK(cudaMemcpy(&local_res, result, sizeof(bool),
+                         cudaMemcpyDeviceToHost));
+  CUDA_ERR_CK(cudaFree(result));
+
+  return local_res;
 }
 
 /* Check if the state is close enough to the goal */

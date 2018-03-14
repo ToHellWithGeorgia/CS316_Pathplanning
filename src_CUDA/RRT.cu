@@ -91,10 +91,21 @@ write_state(FILE *fd, ppstate *s)
 __host__ bool
 run_RRT (struct pathPlanning *pp)
 {
+  /* Setting up timing for CUDA. */
+  float execution = 0;
+  cudaEvent_t start,stop;
+  cudaStream_t filterStream;
+
+  CUDA_ERR_CK(cudaEventCreate(&start));
+  CUDA_ERR_CK(cudaEventCreate(&stop));
+  CUDA_ERR_CK(cudaStreamCreate(&filterStream));
+
+  /* Start the timing. */
+  CUDA_ERR_CK(cudaEventRecord(start, filterStream));
+
   RRT_init(pp);
  
   uint32_t iter_cnt = 0;
-  // bool reached = false;
 
   /* TODO: This while loop could be parellelized. Maybe create multiple
      initial trees? */
@@ -130,9 +141,14 @@ run_RRT (struct pathPlanning *pp)
     /* Check if the new node is close enough to the goal. */
     if (isGoalSatisfied(pp, new_state))
     {
+      /* Stop the CUDA timing. */
+      CUDA_ERR_CK(cudaEventRecord(stop, filterStream));
+      CUDA_ERR_CK(cudaEventSynchronize(stop));
+      CUDA_ERR_CK(cudaEventElapsedTime(&execution, start, stop));
+
       /* Found the solution! Stop the loop and collect the path. */
-      printf("Solution found! Takes %d loops. Sampled %d states.\n", iter_cnt,
-             node_cnt);
+      printf("Solution found! Takes %d loops. Sampled %d states. Time:"
+             " %f ms\n", iter_cnt, node_cnt, execution);
       FILE *fd = pp->_out_file;
 
       /* Write the goal to the file, then traverse the tree */

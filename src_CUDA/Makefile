@@ -1,8 +1,8 @@
 NVCCFLAGS = -arch=compute_61 -code=sm_61 -Xptxas "-v" -I.
-NVCCLDFLAGS = -L /usr/local/cuda-9.1/lib64
+NVCCLDFLAGS = -L /usr/local/cuda/lib64
 NVCCLIBS = -lcudart
 
-CFLAGS=-I /usr/local/cuda-9.1/include -I. -Wall -g -lm
+CFLAGS=-I /usr/local/cuda/include -I. -Wall -g -lm
 DEPS = PathPlanning.h RRT.h
 OBJ = PathPlanning.o RRT.o RRTtest.o
 

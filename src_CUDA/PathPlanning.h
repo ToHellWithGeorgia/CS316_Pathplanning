@@ -12,7 +12,8 @@
     cudaError_t err = expr;    \
     if (err != cudaSuccess)    \
     {                          \
-      printf("CUDA call failed!\n%s\n", cudaGetErrorString(err)); \
+      printf("CUDA call failed in file %s at line %d!\n%s\n", \
+             __FILE__, __LINE__, cudaGetErrorString(err)); \
       exit(1);                 \
     }                          \
   }

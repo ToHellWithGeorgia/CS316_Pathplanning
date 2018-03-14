@@ -120,7 +120,7 @@ eightCubeValidFunc (ppstate* state)
   return true;
 }
 
-/* A  */
+/* A simple maze. */
 bool
 simpleMazeValidFunc(ppstate *state)
 {
