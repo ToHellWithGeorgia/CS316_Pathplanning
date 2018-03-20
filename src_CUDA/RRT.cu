@@ -12,7 +12,7 @@ static uint32_t tree_size;  /* Keep tracks of how big is the tree. */
 
 static void RRT_init(pp*);
 static void expand_tree_size(void);
-static uint32_t findNN(ppstate*);
+uint32_t findNN(ppstate*);
 static void write_state(FILE*, ppstate*);
 
 /* Init a 1k tree first. We will grow the array if it needs more size. */
@@ -42,7 +42,7 @@ expand_tree_size()
 
 /* Find the nearest neighbour in the tree now to the target.
    TODO: this part should be parellelizable. */
-static uint32_t
+uint32_t
 findNN(ppstate *tgt)
 {
   /* We will use a brutal force search for now. Maybe use the kd-tree */
