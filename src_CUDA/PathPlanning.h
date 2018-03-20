@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
+#include <math.h>
 #include <cuda_runtime.h>
 
 #define CUDA_ERR_CK(expr) \
@@ -17,6 +18,45 @@
       exit(1);                 \
     }                          \
   }
+
+//number of points and triangles in the meshes
+//#define ROBOT_NUM_TRIANGLES 44
+//#define ROBOT_NUM_POINTS 132
+#define ROBOT_NUM_POINTS 132
+//#define OBSTACLE_NUM_TRIANGLES 
+//#define OBSTACLE_NUM_POINTS 3744
+#define OBSTACLE_NUM_POINTS 3744
+
+//some vector macros for triangle test
+/*#define CROSS(dest,v1,v2){                     \
+              dest[0]=v1[1]*v2[2]-v1[2]*v2[1]; \
+              dest[1]=v1[2]*v2[0]-v1[0]*v2[2]; \
+              dest[2]=v1[0]*v2[1]-v1[1]*v2[0];}*/
+
+#define CROSS(dest,v1,v2){                     \
+              dest.x=v1.y*v2.z-v1.z*v2.y; \
+              dest.y=v1.z*v2.x-v1.x*v2.z; \
+              dest.z=v1.x*v2.y-v1.y*v2.x;}
+
+#define DOT(v1,v2) (v1.x*v2.x+v1.y*v2.y+v1.z*v2.z)
+
+#define SUB(dest,v1,v2){         \
+            dest.x=v1.x-v2.x; \
+            dest.y=v1.y-v2.y; \
+            dest.z=v1.z-v2.z;}
+
+#define ADD(dest,v1,v2){         \
+            dest.x=v1.x+v2.x; \
+            dest.y=v1.y+v2.y; \
+            dest.z=v1.z+v2.z;}
+
+#define FABS(x) (float)(fabs(x)) 
+
+extern float *robot_p;
+extern float *obstacle_p;
+
+extern float *dev_robot_p;
+extern float *dev_obstacle_p;
 
 /* path planning state */
 struct state
@@ -61,5 +101,8 @@ float calDist(ppstate*, ppstate*);
 void copyState(ppstate*, ppstate*);
 ppstate* sampleUniform(pp*);
 ppstate* sampleGoal(pp*);
+
+__device__ bool tempValid(ppstate*);
+__device__ bool tempValid_cuda(ppstate*, float*, float*);
 
 #endif /* PathPlanning.h */

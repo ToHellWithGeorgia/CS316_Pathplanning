@@ -15,8 +15,8 @@ OBJ = PathPlanning.o RRT.o RRTtest.o
 #RRTtest: $(OBJ)
 #	gcc -o $@ $^ $(CFLAGS)
 
-RRTtest: $(OBJ)
-	nvcc $(NVCCFLAGS) $(NVCCLDFLAGS) -o $@ $^ $(NVCCLIBS)
+RRTtest: $(OBJ) $(DEPS)
+	nvcc $(NVCCFLAGS) $(NVCCLDFLAGS) -o $@ $(OBJ) $(NVCCLIBS)
 
 #RRTtest.o: RRTtest.c
 #	gcc -c -o $@ $^ $(CFLAGS)
@@ -28,13 +28,13 @@ RRTtest: $(OBJ)
 #	gcc -c -o $@ $^ $(CFLAGS)
 
 RRTtest.o: RRTtest.cu
-	nvcc $(NVCCFLAGS) -c -o $@ $^
+	nvcc $(NVCCFLAGS) -c -o $@ -dc $^
 
-PathPlanning.o: PathPlanning.cu
-	nvcc $(NVCCFLAGS) -c -o $@ $^
+PathPlanning.o: PathPlanning.cu PathPlanning.h
+	nvcc $(NVCCFLAGS) -c -o $@ -dc $<
 
-RRT.o: RRT.cu
-	nvcc $(NVCCFLAGS) -c -o $@ $^
+RRT.o: RRT.cu RRT.h
+	nvcc $(NVCCFLAGS) -c -o $@ -dc $<
 
 clean:
 	rm -rf *.o RRTtest

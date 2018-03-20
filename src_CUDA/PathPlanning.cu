@@ -3,9 +3,16 @@
 #include "PathPlanning.h"
 
 /* Number of sample points for valid checker. */
-#define NUMSAMPLE 1048576
+// #define NUMSAMPLE 1048576
+#define NUMSAMPLE 1024
 /* The distance square threshold of being close enough*/
 #define DIST2_THRESHOLD 0.01
+
+float *robot_p;
+float *obstacle_p;
+
+float *dev_robot_p;
+float *dev_obstacle_p;
 
 static bool checkBoundary(pp*, float, float, float);
 // bool checkValid(pp*, ppstate*);
@@ -91,27 +98,14 @@ checkValid(pp *pp, ppstate *state)
 }
 
 /* Cannot use the host valid checker code. Workaround. */
-__device__ bool
-tempValid(ppstate* state)
-{
-  float x = state->x;
-  float z = state->z;
-
-  if ((x > 1) && (x < 2) &&
-      (z >= 0) && (z < 4))
-    return false;
-
-  if ((x > 3) && (x < 4) &&
-      (z > 1) && (z <= 5))
-    return false;
-
-  return true;
-}
+//__device__ bool
+//tempValid(ppstate* state);
 
 /* Kernel to boost the valid checking process. */
 __global__ void
 validCheckKernel(pp *pp, float x1, float y1, float z1,
-                 float stepx, float stepy, float stepz, bool *result)
+                 float stepx, float stepy, float stepz, bool *result,
+                 float *dev_rob, float *dev_obst)
 {
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   // __shared__ bool temp;
@@ -122,12 +116,15 @@ validCheckKernel(pp *pp, float x1, float y1, float z1,
   checkState.x = x1 + i * stepx;
   checkState.y = y1 + i * stepy;
   checkState.z = z1 + i * stepz;
+  /*
   if (!tempValid(&checkState))
+    *result = false;
+  */
+  if (!tempValid_cuda(&checkState, dev_rob, dev_obst))
     *result = false;
 
   // __syncthreads();
   // *result = temp;
-
 }
 
 /* Check if a transition from start state to end state if valid. */
@@ -169,7 +166,8 @@ isTransitionValid(pp *pp, ppstate *start, ppstate *end)
     int numThread = 128;
     validCheckKernel<<<NUMSAMPLE/numThread, numThread>>>(pp, x1, y1, z1,
                                                          stepx, stepy, stepz,
-                                                         result);
+                                                         result, dev_robot_p,
+                                                         dev_obstacle_p);
 
     CUDA_ERR_CK(cudaMemcpy(&local_res, result, sizeof(bool),
                            cudaMemcpyDeviceToHost));
@@ -258,4 +256,157 @@ sampleGoal(pp* pp)
   assert (out != NULL);
   copyState(out, &pp->_goal_state);
   return out;
+}
+
+/*
+__device__ bool
+tempValid(ppstate* state)
+{
+  float x = state->x;
+  float z = state->z;
+
+  if ((x > 1) && (x < 2) &&
+      (z >= 0) && (z < 4))
+    return false;
+
+  if ((x > 3) && (x < 4) &&
+      (z > 1) && (z <= 5))
+    return false;
+
+  return true;
+}
+*/
+
+__device__ bool
+tempValid_cuda(ppstate *state, float *dev_rob, float *dev_obst)
+{
+  float x_pos = state->x;
+  float y_pos = state->y;
+  float z_pos = state->z;
+  ppstate A;
+  ppstate B;
+  ppstate C;
+  ppstate D;
+  ppstate E;
+  ppstate F;
+  ppstate AB_cross_AC;
+  ppstate A_B;
+  ppstate A_C;
+  ppstate P;
+  ppstate Q;
+  ppstate Q_P;
+  ppstate A_P;
+  ppstate QP_cross_AP;
+  int robot_tri = 0;
+  for (robot_tri = 0; robot_tri<3 * ROBOT_NUM_POINTS; robot_tri += 9) {
+    /*float A[3];
+    float B[3];
+    float C[3];
+    float A_B[3];
+    float A_C[3];
+    float AB_cross_AC[3];*/
+    // coords of pt A of robot triangle
+    A.x = dev_rob[robot_tri] + x_pos;
+    A.y = dev_rob[robot_tri + 1] + y_pos;
+    A.z = dev_rob[robot_tri + 2] + z_pos;
+    // coords of pt B of robot triangle
+    B.x = dev_rob[robot_tri + 3] + x_pos;
+    B.y = dev_rob[robot_tri + 4] + y_pos;
+    B.z = dev_rob[robot_tri + 5] + z_pos;
+    // coords of pt C of robot triangle
+    C.x = dev_rob[robot_tri + 6] + x_pos;
+    C.y = dev_rob[robot_tri + 7] + y_pos;
+    C.z = dev_rob[robot_tri + 8] + z_pos;
+
+    SUB(A_B, B, A);
+    SUB(A_C, C, A);
+    CROSS(AB_cross_AC, A_B, A_C);
+
+    //Now we iterate over obstacle triangles
+    int obstacle_tri = 0;
+    for (obstacle_tri = 0; obstacle_tri<3 * OBSTACLE_NUM_POINTS; obstacle_tri += 9) {
+
+      /*float D[3];
+      float E[3];
+      float F[3];*/
+
+      // coords of pt A of obstacle triangle
+      D.x = dev_obst[obstacle_tri];
+      D.y = dev_obst[obstacle_tri + 1];
+      D.z = dev_obst[obstacle_tri + 2];
+      // coords of pt B of obstacle triangle
+      E.x = dev_obst[obstacle_tri + 3];
+      E.y = dev_obst[obstacle_tri + 4];
+      E.z = dev_obst[obstacle_tri + 5];
+      // coords of pt C of obstacle triangle
+      F.x = dev_obst[obstacle_tri + 6];
+      F.y = dev_obst[obstacle_tri + 7];
+      F.z = dev_obst[obstacle_tri + 8];
+
+      //iterate through edges of obstacle triangle and perform line-triangle intersection tests
+      int edge = 0;
+      /*float P[3];
+      float Q[3];
+      float A_P[3];
+      float Q_P[3];
+      float QP_cross_AP[3];*/
+      float t_num;
+      float t_denom;
+      float x_num;
+      float y_num;
+      for (edge = 0;edge<3;edge++) {
+        if (edge == 0) {
+          //P = D;
+          //Q = E;
+          /*int dim;
+          for (dim = 0;dim<3;dim++) {
+            P[dim] = D[dim];
+            Q[dim] = E[dim];
+          }*/
+          P = D;
+          Q = E;
+          SUB(A_P, P, A);
+          t_num = DOT(A_P, AB_cross_AC);
+        }
+        else if (edge == 1) {
+          //Q = F;
+          /*int dim;
+          for (dim = 0;dim<3;dim++)
+            Q[dim] = F[dim];*/
+          Q=F;
+
+        }
+        else {
+          //P = E;
+          /*int dim;
+          for (dim = 0;dim<3;dim++)
+            P[dim] = E[dim];*/
+          P = E;
+          SUB(A_P, P, A);
+          t_num = DOT(A_P, AB_cross_AC);
+        }
+        SUB(Q_P, P, Q);
+        t_denom = DOT(Q_P, AB_cross_AC);
+        // if 0 <= t <= 1
+        if (((t_num == 0.0f) & (FABS(t_denom) > 0.0f)) | ((FABS(t_num) <= FABS(t_denom)) & ~((t_num < 0.0f) ^ (t_denom < 0.0f)) & (FABS(t_denom) > 0.0f))) {
+          CROSS(QP_cross_AP, Q_P, A_P);
+          x_num = DOT(A_C, QP_cross_AP);
+          y_num = -DOT(A_B, QP_cross_AP);
+          // 0 <= x <= 1?
+          bool cond1 = ((x_num == 0.0f) | ((FABS(x_num) <= FABS(t_denom)) & ~((x_num < 0.0f) ^ (t_denom < 0.0f))));
+          // 0 <= y <= 1?
+          bool cond2 = ((y_num == 0.0f) | ((FABS(y_num) <= FABS(t_denom)) & ~((y_num < 0.0f) ^ (t_denom < 0.0f))));
+          // (x+y) <= 1?
+          float sum = x_num + y_num;
+          bool cond3 = ((FABS(sum) <= FABS(t_denom)) | (t_denom < 0.0f));
+          if (cond1 & cond2 & cond3) {
+            return false;
+          }
+        }
+      }
+
+    }
+  }
+  
+  return true;
 }
