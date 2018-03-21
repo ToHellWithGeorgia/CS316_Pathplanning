@@ -22,8 +22,10 @@ int main()
   setBias(&rrt, 0.1);
 
   FILE *fd;
+  FILE *fd1;
   fd = fopen("solution.dat", "w");
-  setOutFile(&rrt, fd);
+  fd1 = fopen("vertices.dat", "w");
+  setOutFile(&rrt, fd, fd1);
 
   srand(time(NULL));
   run_RRT(&rrt);

@@ -13,7 +13,7 @@ static bool checkValid(pp*, ppstate*);
 static bool
 checkBoundary(pp* pp, float x, float y, float z)
 {
-  float limit = pp->_side_max; 
+  float limit = pp->_side_max;
   if ((x >= 0) && (y >= 0) && (z >= 0) &&
       (x <= limit) && (y <= limit) && (z <= limit))
     return true;
@@ -48,7 +48,7 @@ setStartState(pp *pp, float x, float y, float z)
   assert (pp->_validFunc(&pp->_start_state));
 }
 
-void 
+void
 setGoalState(pp *pp, float x, float y, float z)
 {
   assert (checkBoundary(pp, x, y, z));
@@ -77,9 +77,10 @@ setBias(pp* pp, float bias)
 }
 
 void
-setOutFile(pp* pp, FILE *fd)
+setOutFile(pp* pp, FILE *fd, FILE *fd1)
 {
   pp->_out_file = fd;
+  pp->_vert_file = fd1;
 }
 
 /* ------------------- Helper Functions ------------------*/

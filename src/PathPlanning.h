@@ -26,6 +26,7 @@ struct pathPlanning
   float _bias;
   bool (*_validFunc)(ppstate*);
   FILE *_out_file;
+  FILE *_vert_file;
 };
 
 typedef struct pathPlanning pp;
@@ -38,7 +39,7 @@ void setGoalState(pp*, float, float, float);
 void setStepSize(pp*, float);
 void setMaxIter(pp*, uint32_t);
 void setBias(pp*, float);
-void setOutFile(pp*, FILE*);
+void setOutFile(pp*, FILE*, FILE*);
 
 /* Helper functions. */
 bool isTransitionValid(pp*, ppstate*, ppstate*);

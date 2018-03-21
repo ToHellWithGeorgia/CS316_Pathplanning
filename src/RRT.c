@@ -62,7 +62,7 @@ findNN(ppstate *tgt)
   return find_idx;
 }
 
-/* Interpolate the target points to be within the distance of the 
+/* Interpolate the target points to be within the distance of the
    original points.*/
 void
 interpolate(ppstate *org, ppstate *tgt, float max_dist)
@@ -92,7 +92,7 @@ bool
 run_RRT (struct pathPlanning *pp)
 {
   RRT_init(pp);
- 
+
   uint32_t iter_cnt = 0;
   // bool reached = false;
 
@@ -148,6 +148,12 @@ run_RRT (struct pathPlanning *pp)
       /* Make sure we reach the start point. */
       assert (node_idx == 0);
       write_state(fd, &tree[0]._pos);
+
+      /* Write all the vertices to the file. */
+      for (size_t ind = 0; ind < node_cnt; ind++)
+      {
+        write_state(pp->_vert_file, &tree[ind]._pos);
+      }
       printf("Solution with %d steps written to the file!\n", num_steps + 1);
       return true;
     }
