@@ -174,6 +174,11 @@ run_RRT (struct pathPlanning *pp)
       expand_tree_size();
   }
 
+  CUDA_ERR_CK(cudaEventRecord(stop, filterStream));
+  CUDA_ERR_CK(cudaEventSynchronize(stop));
+  CUDA_ERR_CK(cudaEventElapsedTime(&execution, start, stop));
   printf("Solution not found :(\n");
+  printf("Sampled %d states in %d loops in %f ms.\n",
+         iter_cnt, node_cnt, execution);
   return false;
 }

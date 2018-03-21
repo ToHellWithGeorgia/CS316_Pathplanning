@@ -19,13 +19,16 @@
     }                          \
   }
 
+#define USE_CUDA true
+// #define NUMSAMPLE 1048576
+#define NUMSAMPLE 512
 //number of points and triangles in the meshes
 //#define ROBOT_NUM_TRIANGLES 44
 //#define ROBOT_NUM_POINTS 132
 #define ROBOT_NUM_POINTS 132
 //#define OBSTACLE_NUM_TRIANGLES 
 //#define OBSTACLE_NUM_POINTS 3744
-#define OBSTACLE_NUM_POINTS 3744
+#define OBSTACLE_NUM_POINTS 1872
 
 //some vector macros for triangle test
 /*#define CROSS(dest,v1,v2){                     \

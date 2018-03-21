@@ -3,8 +3,6 @@
 #include "PathPlanning.h"
 
 /* Number of sample points for valid checker. */
-// #define NUMSAMPLE 1048576
-#define NUMSAMPLE 1024
 /* The distance square threshold of being close enough*/
 #define DIST2_THRESHOLD 0.01
 
@@ -151,9 +149,7 @@ isTransitionValid(pp *pp, ppstate *start, ppstate *end)
   float stepy = (y2 - y1) / NUMSAMPLE;
   float stepz = (z2 - z1) / NUMSAMPLE;
 
-  bool use_CUDA = true;
-
-  if (use_CUDA)
+  if (USE_CUDA)
   {
     /* Setting up the variable to run CUDA kernel. */ 
     bool local_res;
